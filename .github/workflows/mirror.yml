@@ -1,0 +1,28 @@
+name: Mirror images from upstream
+# This repo is an archival fork of portainer/portainer-mcp (deprecated upstream).
+# Re-run manually to re-mirror upstream image tags into ghcr.io/marcinkuk/portainer-mcp.
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Comma-separated upstream tags to mirror'
+        default: '2.45,2.45.3,2.45.1,2.45.0,2.44,2.44.0,2.43,2.43.3,2.42,2.42.6'
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      TARGET: ghcr.io/marcinkuk/portainer-mcp
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          IFS=','; for t in ${{ github.event.inputs.tags }}; do
+            docker pull docker.io/portainer/portainer-mcp:"$t"
+            docker tag docker.io/portainer/portainer-mcp:"$t" "$TARGET:$t"
+            docker push "$TARGET:$t"
+          done
