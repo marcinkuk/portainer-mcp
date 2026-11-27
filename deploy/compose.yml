@@ -30,12 +30,14 @@ services:
       PORTAINER_MCP_AUTH_TOKEN: ${PORTAINER_MCP_AUTH_TOKEN}
     volumes:
       # Certificates live in a Docker volume, not in the repository: the git
-      # source is public. Re-seed with `docker cp` after rotation.
-      - type: volume
-        source: portainer-mcp-tls
-        target: /tls
-        read_only: true
-        volume:
-          nocopy: true
+      # source is public. Create it once and re-seed with `docker cp` after
+      # rotation.
+      - portainer-mcp-tls:/tls:ro
     ports:
       - "17717:17717"
+
+volumes:
+  # Pre-created out-of-band (`docker volume create portainer-mcp-tls`); compose
+  # must not try to own it, or it looks for a project-scoped volume instead.
+  portainer-mcp-tls:
+    external: true
